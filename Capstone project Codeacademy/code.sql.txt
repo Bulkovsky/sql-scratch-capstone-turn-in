@@ -1,0 +1,109 @@
+TASK 1:
+
+Counts number of campaigns -
+
+SELECT COUNT (distinct utm_campaign)
+FROM page_visits
+;
+
+Counts number of sources - 
+
+SELECT COUNT (DISTINCT utm_source)
+FROM page_visits
+;
+
+Shows which campaigns use which sources - 
+
+SELECT DISTINCT utm_campaign, utm_source
+FROM page_visits
+;
+
+TASK 2:
+
+Shows what pages are on CoolTShirts.com - 
+
+SELECT DISTINCT page_name
+FROM page_visits
+;
+
+TASK 3:
+
+Counts how many first touches each campaign is responsible for -
+Used LEFT JOIN instead of JOIN because I think that showing 0 by the campaign name is
+saying more than not showing campaign name at all.
+
+WITH first_touch AS (
+    SELECT user_id,
+       min(timestamp) as first_touch_at
+    FROM page_visits
+    GROUP BY user_id)
+SELECT utm_campaign, count (first_touch.first_touch_at)
+FROM page_visits
+LEFT JOIN first_touch
+ON page_visits.user_id = first_touch.user_id
+AND first_touch.first_touch_at = page_visits.timestamp
+GROUP BY page_visits.utm_campaign;
+
+TASK 4:
+
+Counts number of last touches for each campaign -
+
+WITH last_touch AS (
+    SELECT user_id,
+       max(timestamp) as last_touch_at
+    FROM page_visits
+    GROUP BY user_id)
+SELECT pv.utm_campaign, count (distinct ft.last_touch_at) as 'Last_Touch_Amount'
+FROM last_touch ft
+JOIN page_visits pv
+    ON ft.user_id = pv.user_id
+    AND ft.last_touch_at = pv.timestamp
+    group by pv.utm_campaign;
+
+TASK 5: 
+
+Counts number distinct users that visited page 4 - Purchase:
+
+select count (distinct user_id) as 'Visits_on_4'
+from page_visits
+where page_name = '4 - purchase'
+;
+
+TASK 6:
+
+Counts number of last touches for each campaign on page 4 - purchase.
+
+WITH last_touch AS (
+    SELECT user_id,
+       max(timestamp) as last_touch_at
+    FROM page_visits
+    GROUP BY user_id)
+SELECT pv.utm_campaign, count (distinct lt.last_touch_at) as 'Last_Touch_Amount'
+FROM last_touch lt
+JOIN page_visits pv
+    ON lt.user_id = pv.user_id
+    AND lt.last_touch_at = pv.timestamp
+    WHERE pv.page_name = '4 - purchase'
+    GROUP BY pv.utm_campaign;
+
+ADDITIONAL QUERY USED IN TYPICAL USER JOURNEY
+
+Counts number of users which visited each site to show user journey:
+
+select count (user_id) as 'Landing_page'
+from page_visits
+where page_name = '1 - landing_page' 
+;
+select count (user_id) as 'Shopping_cart'
+from page_visits
+where page_name = '2 - shopping_cart'
+;
+select count (user_id) as 'Checkout'
+from page_visits
+where page_name = '3 - checkout'
+;
+select count (user_id) as 'Purchase'
+from page_visits
+where page_name = '4 - purchase'
+;
+
